@@ -33,7 +33,7 @@ function StripePayment({ clientSecret, orderId, onSuccess }) {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: window.location.origin, // ممكن تغير لصفحة نجاح
+        return_url: window.location.origin,
       },
     });
 
@@ -96,9 +96,6 @@ export default function CartClient({ cart }) {
     });
   }
 
-  // =========================
-  // عرض الكارت الطبيعي + SummaryCard
-  // =========================
   return (
     <div className="flex gap-7 mt-10 items-start">
       <div className="flex-1 flex flex-col gap-7">

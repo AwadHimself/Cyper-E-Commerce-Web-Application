@@ -3,9 +3,15 @@
 import { ShoppingCart } from "lucide-react";
 import { addToCart } from "../_lib/actions";
 import { useTransition } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
+import { Button } from "../../components/ui/button";
 
-export default function CartButton({ productId }) {
+export default function AddToCartButton({
+  productId,
+  children,
+  position,
+  disabled,
+}) {
   const [isPending, startTransition] = useTransition();
 
   function handleClick() {
@@ -14,18 +20,19 @@ export default function CartButton({ productId }) {
         await addToCart(productId);
         toast.success("Product added to cart");
       } catch (error) {
-        toast.error("Failed to add product");
+        toast.error(error.message);
         console.error(error);
       }
     });
   }
 
   return (
-    <ShoppingCart
-      className={`cursor-pointer self-end ${
-        isPending ? "opacity-50 pointer-events-none" : ""
-      }`}
+    <Button
+      className={`${position === "end" ? "self-end" : ""}`}
       onClick={handleClick}
-    />
+      disabled={isPending || disabled}
+    >
+      {children}
+    </Button>
   );
 }

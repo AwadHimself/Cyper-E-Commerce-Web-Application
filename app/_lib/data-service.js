@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { supabase } from "./supabase";
 
 export async function getBanners() {
@@ -144,7 +145,7 @@ export async function createAppUser(newUser) {
   return data;
 }
 
-export async function getUserCart(userId) {
+export const getUserCart = cache(async (userId) => {
   const { data, error } = await supabase
     .from("carts")
     .select(
@@ -177,7 +178,7 @@ export async function getUserCart(userId) {
   }
 
   return data;
-}
+});
 
 export async function getUserOrders(userId) {
   const { data, error } = await supabase

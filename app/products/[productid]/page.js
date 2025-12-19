@@ -8,6 +8,8 @@ import ProductRating from "../../_components/ProductRating";
 import ProductReviewsList from "../../_components/ProductReviewsList";
 
 async function Page({ params }) {
+  // await new Promise((resolve) => setTimeout(resolve, 30000000));
+
   const resolvedParams = await params;
   const productId = resolvedParams.productid;
 

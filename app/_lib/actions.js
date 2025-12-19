@@ -4,6 +4,7 @@ import { signIn, signOut, auth } from "./auth";
 import { supabase } from "./supabase";
 import { supabaseAdmin } from "./supabase-admin";
 import { stripe } from "./stripe";
+import { revalidatePath } from "next/cache";
 
 /* =========================
    AUTH ACTIONS
@@ -82,6 +83,8 @@ export async function addToCart(productId) {
     });
   }
 
+  revalidatePath("/");
+
   return { success: true };
 }
 
@@ -102,6 +105,7 @@ export async function updateCartItemQuantity(productId, quantity) {
 
   if (error) throw new Error(error.message);
 
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -120,6 +124,7 @@ export async function removeCartItem(productId) {
 
   if (error) throw new Error(error.message);
 
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -131,6 +136,7 @@ export async function clearCart() {
   const cart = await getOrCreateCart(userId);
 
   await supabaseAdmin.from("cart_items").delete().eq("cart_id", cart.id);
+  revalidatePath("/");
 
   return { success: true };
 }
@@ -153,20 +159,18 @@ export async function checkoutAction(paymentMethod, shippingData) {
 
   if (!cartItems || cartItems.length === 0) throw new Error("Cart is empty");
 
-  // 1️⃣ Create order with shipping address
   const { data: order, error: orderError } = await supabaseAdmin
     .from("orders")
     .insert({
       user_id: userId,
       status: "pending",
-      shipping_address: shippingData, // ← هنا
+      shipping_address: shippingData,
     })
     .select()
     .single();
 
   if (orderError) throw new Error(orderError.message);
 
-  // باقي الكود كما هو
   const orderItems = cartItems.map((item) => ({
     order_id: order.id,
     product_id: item.product_id,
@@ -190,7 +194,29 @@ export async function checkoutAction(paymentMethod, shippingData) {
     .update({ status: paymentMethod === "cash" ? "processing" : "pending" })
     .eq("id", order.id);
 
+  for (const item of cartItems) {
+    const { data: product } = await supabaseAdmin
+      .from("products")
+      .select("stock_count")
+      .eq("id", item.product_id)
+      .single();
+
+    if (product.stock_count < item.quantity) {
+      throw new Error("Insufficient stock");
+    }
+
+    await supabaseAdmin
+      .from("products")
+      .update({
+        stock_count: product.stock_count - item.quantity,
+      })
+      .eq("id", item.product_id);
+  }
+
   await supabaseAdmin.from("cart_items").delete().eq("cart_id", cart.id);
+
+  revalidatePath("/");
+  revalidatePath("/cart");
 
   return { success: true, orderId: order.id };
 }
@@ -212,7 +238,7 @@ export async function createStripePaymentIntent(orderId) {
   if (!order) throw new Error("Order not found");
 
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(order.total * 100), // EGP → piasters
+    amount: Math.round(order.total * 100),
     currency: order.currency.toLowerCase(),
     metadata: {
       order_id: order.id,

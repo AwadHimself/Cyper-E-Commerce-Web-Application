@@ -2,7 +2,7 @@ import "./_styles/globals.css";
 import Header from "./_components/Header";
 import NextThemesProvider from "./_components/theme-provider";
 import { Inter } from "next/font/google";
-import { Toaster } from "react-hot-toast"; // إضافة التوست
+import { Toaster } from "sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,26 +22,12 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className}`}>
         <NextThemesProvider>
+          <Toaster position="top-right" />
           <header>
             <Header />
           </header>
 
           {children}
-
-          <Toaster
-            position="top-right"
-            reverseOrder={false}
-            toastOptions={{
-              success: {
-                className: "bg-green-500 text-white",
-                duration: 3000,
-              },
-              error: {
-                className: "bg-red-500 text-white",
-                duration: 3000,
-              },
-            }}
-          />
         </NextThemesProvider>
       </body>
     </html>

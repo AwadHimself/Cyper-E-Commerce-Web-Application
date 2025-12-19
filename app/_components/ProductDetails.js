@@ -1,4 +1,5 @@
 import { Button } from "../../components/ui/button";
+import AddToCartButton from "./AddToCartButton";
 
 function ProductDetails({ finalPrice, productData, productDiscount }) {
   return (
@@ -31,12 +32,13 @@ function ProductDetails({ finalPrice, productData, productDiscount }) {
       </div>
       <p className="text-sm font-medium">{productData.description}</p>
       <div>
-        <Button
+        <AddToCartButton
+          productId={productData.id}
           disabled={productData.stock_count === 0}
           className="px-15 py-5 text-xl font-medium"
         >
           {productData.stock_count ? "Add To Cart" : "Out Of Stock"}
-        </Button>
+        </AddToCartButton>
       </div>
     </div>
   );
